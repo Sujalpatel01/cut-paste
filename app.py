@@ -30,7 +30,7 @@ def get_session():
         try:
             print("Importing rembg and loading model (this could take a minute)...")
             from rembg import new_session
-            sess = new_session("u2net")
+            sess = new_session("u2netp")
         except Exception as e:
             print(f"Failed to load model: {e}")
     return sess
@@ -52,13 +52,10 @@ async def remove_background(file: UploadFile = File(...)):
     orig = Image.open(io.BytesIO(data)).convert("RGBA")
     W, H = orig.size
 
-    # Remove background with alpha matting and post processing (same as original script)
+    # Remove background. Using u2netp and disabling alpha matting for faster processing on free cloud CPUs.
     out_bytes = remove(
         data, session=session,
-        alpha_matting=True,
-        alpha_matting_foreground_threshold=270,
-        alpha_matting_background_threshold=20,
-        alpha_matting_erode_size=11,
+        alpha_matting=False,
         post_process_mask=True,
     )
 
