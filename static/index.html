@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CutPaste — Perfect HD Background Remover</title>
+    <meta name="description" content="AI powered high definition background remover using rembg u2net model.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="background-elements">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    
+    <main class="container">
+        <header>
+            <h1><span class="gradient-text">CutPaste</span></h1>
+            <p class="subtitle">Perfect HD Background Remover</p>
+            <p class="features">rembg u2net · Alpha Matting · Edge Cleanup · Same Resolution</p>
+        </header>
+
+        <div class="workspace">
+            <div class="panel upload-panel" id="drop-zone">
+                <input type="file" id="file-input" accept="image/jpeg, image/png, image/webp, image/bmp, image/tiff" hidden>
+                <div class="upload-content" id="upload-content">
+                    <div class="icon-upload">📁</div>
+                    <p>Drop your photo here</p>
+                    <span>or click to upload</span>
+                </div>
+                <img id="original-preview" class="preview-img hidden" alt="Original Image">
+            </div>
+
+            <div class="panel result-panel">
+                <div class="result-placeholder" id="result-placeholder">
+                    <div class="icon-sparkles">✨</div>
+                    <p>Perfect result<br>will appear here</p>
+                </div>
+                <img id="result-preview" class="preview-img hidden" alt="Result Image">
+                
+                <div class="loading-overlay hidden" id="loading-overlay">
+                    <div class="spinner"></div>
+                    <p id="loading-text">AI processing...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="btn-remove" class="btn btn-primary" disabled>
+                <span class="icon">✂️</span> Remove BG
+            </button>
+            <button id="btn-save" class="btn btn-success" disabled>
+                <span class="icon">💾</span> Save HD PNG
+            </button>
+            <button id="btn-clear" class="btn btn-secondary" disabled>
+                <span class="icon">🗑</span> Clear
+            </button>
+        </div>
+        
+        <div class="status-bar">
+            <p id="status-text">Upload a photo — 100% perfect background remove</p>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
