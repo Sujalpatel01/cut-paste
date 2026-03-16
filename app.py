@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import io
 import gc
+import os
+
 # Set U2NET_HOME to /tmp for serverless environments (like Vercel) which have read-only file systems
 os.environ["U2NET_HOME"] = "/tmp"
 # Limit thread count to prevent Render free tier from freezing on boot
