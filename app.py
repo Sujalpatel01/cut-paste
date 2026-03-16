@@ -7,6 +7,9 @@ import gc
 import os
 from PIL import Image, ImageFilter
 
+# Set U2NET_HOME to /tmp for serverless environments (like Vercel) which have read-only file systems
+os.environ["U2NET_HOME"] = "/tmp"
+
 try:
     from rembg import remove, new_session
 except ImportError:
@@ -22,15 +25,23 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-try:
-    sess = new_session("u2net")
-except Exception as e:
-    print(f"Failed to load model: {e}")
-    sess = None
+# Lazy loading session to avoid Vercel deployment timeouts during build/cold-start
+sess = None
+
+def get_session():
+    global sess
+    if sess is None:
+        try:
+            print("Loading u2net model...")
+            sess = new_session("u2net")
+        except Exception as e:
+            print(f"Failed to load model: {e}")
+    return sess
 
 @app.post("/api/remove-bg")
 async def remove_background(file: UploadFile = File(...)):
-    if sess is None:
+    session = get_session()
+    if session is None:
         return Response(content="Model not loaded or rembg is not installed", status_code=500)
     
     data = await file.read()
@@ -39,7 +50,7 @@ async def remove_background(file: UploadFile = File(...)):
 
     # Remove background with alpha matting and post processing (same as original script)
     out_bytes = remove(
-        data, session=sess,
+        data, session=session,
         alpha_matting=True,
         alpha_matting_foreground_threshold=270,
         alpha_matting_background_threshold=20,

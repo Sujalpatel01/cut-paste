@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CutPaste — HD Background Remover</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#07080f;font-family:system-ui,sans-serif;color:#e2e8f0;min-height:100vh;padding:32px 20px 70px}
+.wrap{max-width:980px;margin:0 auto}
+.hdr{text-align:center;margin-bottom:32px}
+.hdr h1{font-size:2rem;font-weight:800;color:#22d3ee;margin-bottom:6px}
+.hdr p{font-size:13px;color:#4b5563}
+.badges{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px}
+.b-a{background:rgba(34,211,238,.1);color:#22d3ee;border:1px solid rgba(34,211,238,.2)}
+.b-b{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.2)}
+.b-c{background:rgba(251,191,36,.1);color:#fbbf24;border:1px solid rgba(251,191,36,.2)}
+.drop{position:relative;border:2px dashed rgba(34,211,238,.2);border-radius:18px;padding:52px 20px;text-align:center;cursor:pointer;transition:.3s;background:rgba(34,211,238,.02);margin-bottom:16px}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop:hover,.drop.over{border-color:#22d3ee;background:rgba(34,211,238,.05);transform:translateY(-2px)}
+.drop-ico{font-size:50px;display:block;margin-bottom:14px;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.drop-t{font-size:18px;font-weight:700;margin-bottom:6px}
+.drop-s{font-size:13px;color:#6b7280}
+.fbar{display:none;margin-bottom:12px;padding:11px 16px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);border-radius:10px;font-size:13px;color:#22d3ee}
+.prog{display:none;margin-bottom:14px}
+.prog-track{height:7px;background:#1e293b;border-radius:4px;overflow:hidden}
+.prog-fill{height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,#22c55e);border-radius:4px;transition:width .4s}
+.prog-lbl{font-size:12px;color:#6b7280;margin-top:7px;text-align:center}
+.msg{display:none;margin-bottom:12px;padding:12px 16px;border-radius:10px;font-size:13px;line-height:1.7}
+.msg.ok{display:block;background:#052e16;border:1px solid #166534;color:#4ade80}
+.msg.err{display:block;background:#2d0505;border:1px solid #991b1b;color:#fca5a5;white-space:pre-line}
+.msg.inf{display:block;background:#0c1a2e;border:1px solid #1e40af;color:#93c5fd}
+.grid{display:none;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.card{background:#0c0e18;border:1px solid #1e293b;border-radius:14px;overflow:hidden}
+.card-top{padding:11px 15px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center}
+.cl{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4b5563;font-weight:600}
+.cr{font-size:10px;font-weight:700;color:#22d3ee;background:#0c2233;padding:2px 8px;border-radius:5px}
+.cb{min-height:280px;display:flex;align-items:center;justify-content:center;padding:14px}
+.cb img{max-width:100%;max-height:320px;object-fit:contain;border-radius:8px}
+.checker{background-image:linear-gradient(45deg,#161b27 25%,transparent 25%),linear-gradient(-45deg,#161b27 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#161b27 75%),linear-gradient(-45deg,transparent 75%,#161b27 75%);background-size:18px 18px;background-position:0 0,0 9px,9px -9px,-9px 0}
+.ph{text-align:center;color:#374151;font-size:13px;line-height:2.4}
+.ph i{font-size:30px;display:block;margin-bottom:8px;font-style:normal}
+.spin{width:34px;height:34px;margin:auto;border:3px solid #1e293b;border-top-color:#22d3ee;border-radius:50%;animation:sp .8s linear infinite;display:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+.acts{display:none;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:13px 24px;border-radius:11px;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:.2s;text-decoration:none;white-space:nowrap}
+.btn:disabled{opacity:.3;pointer-events:none}
+.btn-run{background:#22d3ee;color:#020d10;flex:1;justify-content:center;box-shadow:0 6px 24px rgba(34,211,238,.2)}
+.btn-run:hover{background:#06b6d4;transform:translateY(-2px)}
+.btn-clr{background:#1e293b;color:#94a3b8;border:1px solid #334155}
+.btn-clr:hover{background:#334155;transform:translateY(-2px)}
+.btn-dl{background:#22c55e;color:#052e16;box-shadow:0 6px 20px rgba(34,197,94,.2)}
+.btn-dl:hover{background:#16a34a;transform:translateY(-2px)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>✂️ CutPaste — HD Background Remover</h1>
+    <p>Transformers.js RMBG-1.4 · Edge Cleanup · No API Key · Same Resolution</p>
+    <div class="badges">
+      <span class="badge b-a">⚡ Transformers.js AI</span>
+      <span class="badge b-b">✨ Edge Cleanup Fix</span>
+      <span class="badge b-c">🆓 No API Key</span>
+    </div>
+  </div>
+
+  <div class="drop" id="drop">
+    <input type="file" id="fileIn" accept="image/*"/>
+    <span class="drop-ico">📂</span>
+    <div class="drop-t">Photo drop કરો અથવા click કરો</div>
+    <div class="drop-s">JPG · PNG · WEBP · BMP — any background</div>
+  </div>
+
+  <div class="fbar" id="fbar"></div>
+  <div class="prog" id="prog">
+    <div class="prog-track"><div class="prog-fill" id="pf"></div></div>
+    <div class="prog-lbl" id="pl">Loading…</div>
+  </div>
+  <div class="msg" id="msg"></div>
+
+  <div class="grid" id="grid">
+    <div class="card">
+      <div class="card-top"><span class="cl">Original</span><span class="cr" id="oRes">—</span></div>
+      <div class="cb"><img id="oImg" alt=""/></div>
+    </div>
+    <div class="card">
+      <div class="card-top"><span class="cl">HD Result — Same Size</span><span class="cr" id="rRes">—</span></div>
+      <div class="cb checker" id="rBody">
+        <div class="spin" id="spin"></div>
+        <div class="ph" id="ph"><i>✨</i>Clean result<br>અહીં આવશે</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acts" id="acts">
+    <button class="btn btn-run" id="btnRun">✂️ Background Remove કરો</button>
+    <button class="btn btn-clr" onclick="clearAll()">🗑 Clear</button>
+    <a class="btn btn-dl" id="btnDl" style="display:none">💾 Same Size PNG Download</a>
+  </div>
+</div>
+
+<script type="module">
+import {
+  AutoModel, AutoProcessor, env, RawImage
+} from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2';
+
+env.allowLocalModels = false;
+env.useBrowserCache  = true;
+env.backends.onnx.wasm.proxy = false;
+
+var file=null, oW=0, oH=0;
+var model=null, processor=null, modelLoaded=false;
+
+// Preload model
+async function preload() {
+  try {
+    setProg(5,'AI model load... (first time 1-2 min)');
+    document.getElementById('prog').style.display='block';
+    model = await AutoModel.from_pretrained('briaai/RMBG-1.4',{
+      config:{model_type:'custom'}
+    });
+    processor = await AutoProcessor.from_pretrained('briaai/RMBG-1.4',{
+      config:{
+        do_normalize:true,do_pad:false,do_rescale:true,do_resize:true,
+        image_mean:[0.5,0.5,0.5],image_std:[1,1,1],
+        resample:2,rescale_factor:0.00392156862745098,
+        size:{width:1024,height:1024}
+      }
+    });
+    modelLoaded=true;
+    document.getElementById('prog').style.display='none';
+    setMsg('✅ AI model ready! Photo upload કરો.','ok');
+  } catch(e) {
+    document.getElementById('prog').style.display='none';
+    setMsg('❌ Model error: '+e.message,'err');
+    console.error(e);
+  }
+}
+preload();
+
+// Drag & drop
+var drop=document.getElementById('drop');
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0])});
+document.getElementById('fileIn').addEventListener('change',e=>{if(e.target.files[0])load(e.target.files[0])});
+
+function load(f){
+  file=f;
+  var mb=(f.size/1024/1024).toFixed(2);
+  var rd=new FileReader();
+  rd.onload=ev=>{
+    var img=new Image();
+    img.onload=()=>{
+      oW=img.naturalWidth; oH=img.naturalHeight;
+      document.getElementById('oImg').src=ev.target.result;
+      document.getElementById('oRes').textContent=oW+'×'+oH;
+      document.getElementById('rRes').textContent=oW+'×'+oH;
+      var fb=document.getElementById('fbar');
+      fb.innerHTML='📂 <b>'+f.name+'</b> · '+mb+' MB · '+oW+'×'+oH+' px';
+      fb.style.display='block';
+      document.getElementById('grid').style.display='grid';
+      document.getElementById('acts').style.display='flex';
+      document.getElementById('btnDl').style.display='none';
+      resetR();
+      setMsg(modelLoaded?'Photo loaded! "Background Remove" click કરો.':'⏳ AI model load... રાહ જુઓ.','inf');
+    };
+    img.src=ev.target.result;
+  };
+  rd.readAsDataURL(f);
+}
+
+document.getElementById('btnRun').addEventListener('click', async()=>{
+  if(!file) return;
+  if(!modelLoaded){setMsg('⏳ AI model load... રાહ જુઓ.','inf');return;}
+  var btn=document.getElementById('btnRun');
+  btn.disabled=true;
+  document.getElementById('spin').style.display='block';
+  document.getElementById('ph').style.display='none';
+  setProg(10,'Image prepare...');
+
+  try{
+    var imgURL=await toDataURL(file);
+    var image=await RawImage.fromURL(imgURL);
+    setProg(28,'AI segmentation...');
+    var {pixel_values}=await processor(image);
+    setProg(52,'Neural network...');
+    var {output}=await model({input:pixel_values});
+    setProg(72,'Mask apply...');
+
+    // Get raw mask at model output size
+    var maskTensor = output[0].mul(255).to('uint8');
+    var mask = await RawImage.fromTensor(maskTensor).resize(oW,oH);
+
+    setProg(80,'Edge cleanup...');
+
+    // ── Edge cleanup: remove dark BG bleeding ──────────────
+    var maskData = mask.data; // Uint8Array of alpha values
+    var W=oW, H=oH;
+
+    // Step 1: threshold — push near-transparent pixels to 0
+    // pixels below 30 alpha → fully transparent
+    for(var i=0;i<maskData.length;i++){
+      if(maskData[i]<30) maskData[i]=0;
+    }
+
+    // Step 2: morphological erosion on mask edges (radius 2)
+    // Remove isolated small blobs (the dark spots on left side)
+    var eroded = new Uint8Array(maskData.length);
+    var r=2;
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=y*W+x;
+        if(maskData[idx]===0){eroded[idx]=0;continue;}
+        var minVal=255;
+        for(var dy=-r;dy<=r;dy++){
+          for(var dx=-r;dx<=r;dx++){
+            var ny=y+dy, nx=x+dx;
+            if(ny<0||ny>=H||nx<0||nx>=W) continue;
+            var v=maskData[ny*W+nx];
+            if(v<minVal) minVal=v;
+          }
+        }
+        eroded[idx]=minVal;
+      }
+    }
+
+    // Step 3: dilate back (recover lost edge, but blobs stay gone)
+    var dilated=new Uint8Array(eroded.length);
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=y*W+x;
+        var maxVal=0;
+        for(var dy=-r;dy<=r;dy++){
+          for(var dx=-r;dx<=r;dx++){
+            var ny=y+dy, nx=x+dx;
+            if(ny<0||ny>=H||nx<0||nx>=W) continue;
+            var v=eroded[ny*W+nx];
+            if(v>maxVal) maxVal=v;
+          }
+        }
+        dilated[idx]=maxVal;
+      }
+    }
+
+    // Step 4: feather edges — smooth alpha transition
+    var feathered=new Float32Array(dilated.length);
+    var fr=1;
+    for(var y=0;y<H;y++){
+      for(var x=0;x<W;x++){
+        var idx=y*W+x;
+        var sum=0,cnt=0;
+        for(var dy=-fr;dy<=fr;dy++){
+          for(var dx=-fr;dx<=fr;dx++){
+            var ny=y+dy, nx=x+dx;
+            if(ny<0||ny>=H||nx<0||nx>=W) continue;
+            sum+=dilated[ny*W+nx]; cnt++;
+          }
+        }
+        feathered[idx]=sum/cnt;
+      }
+    }
+
+    setProg(90,'HD Canvas composite...');
+
+    // Draw original + apply cleaned alpha
+    var canvas=document.createElement('canvas');
+    canvas.width=oW; canvas.height=oH;
+    var ctx=canvas.getContext('2d');
+    var origImg=await loadImg(imgURL);
+    ctx.drawImage(origImg,0,0,oW,oH);
+    var iData=ctx.getImageData(0,0,oW,oH);
+    for(var i=0;i<feathered.length;i++){
+      iData.data[i*4+3]=Math.round(Math.max(0,Math.min(255,feathered[i])));
+    }
+    ctx.putImageData(iData,0,0);
+
+    setProg(96,'PNG export...');
+    canvas.toBlob(blob=>{
+      var url=URL.createObjectURL(blob);
+      var outMB=(blob.size/1024/1024).toFixed(2);
+      document.getElementById('spin').style.display='none';
+      document.getElementById('rBody').innerHTML=
+        '<img src="'+url+'" style="max-width:100%;max-height:320px;object-fit:contain;border-radius:8px"/>';
+      document.getElementById('rRes').textContent=oW+'×'+oH+' ✓';
+      var dl=document.getElementById('btnDl');
+      dl.href=url; dl.download='CutPaste_'+oW+'x'+oH+'.png'; dl.style.display='inline-flex';
+      setProg(100,'Done! ✨');
+      setTimeout(()=>document.getElementById('prog').style.display='none',900);
+      setMsg('✅ Clean result! '+oW+'×'+oH+' px · '+outMB+' MB — Download click કરો!','ok');
+      btn.disabled=false;
+    },'image/png');
+
+  }catch(err){
+    document.getElementById('spin').style.display='none';
+    document.getElementById('ph').style.display='block';
+    document.getElementById('prog').style.display='none';
+    setMsg('❌ Error: '+err.message,'err');
+    btn.disabled=false; console.error(err);
+  }
+});
+
+function toDataURL(f){return new Promise(r=>{var rd=new FileReader();rd.onload=e=>r(e.target.result);rd.readAsDataURL(f)})}
+function loadImg(src){return new Promise((r,j)=>{var i=new Image();i.onload=()=>r(i);i.onerror=j;i.src=src})}
+function setProg(p,l){document.getElementById('prog').style.display='block';document.getElementById('pf').style.width=p+'%';document.getElementById('pl').textContent=l}
+function setMsg(t,type){var el=document.getElementById('msg');el.textContent=t;el.className='msg '+type}
+function resetR(){document.getElementById('rBody').innerHTML='<div class="spin" id="spin" style="display:none"></div><div class="ph" id="ph"><i>✨</i>Clean result<br>અહીં આવશે</div>'}
+function clearAll(){
+  file=null;
+  document.getElementById('fileIn').value=''; document.getElementById('oImg').src='';
+  document.getElementById('grid').style.display='none'; document.getElementById('acts').style.display='none';
+  document.getElementById('fbar').style.display='none'; document.getElementById('btnDl').style.display='none';
+  document.getElementById('prog').style.display='none'; document.getElementById('msg').className='msg';
+  resetR();
+}
+window.clearAll=clearAll;
+</script>
+</body>
+</html>
