@@ -4,16 +4,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import io
 import gc
-import os
-from PIL import Image, ImageFilter
-
 # Set U2NET_HOME to /tmp for serverless environments (like Vercel) which have read-only file systems
 os.environ["U2NET_HOME"] = "/tmp"
-
-try:
-    from rembg import remove, new_session
-except ImportError:
-    print("Please install dependencies: pip install rembg pillow fastapi uvicorn python-multipart")
+# Limit thread count to prevent Render free tier from freezing on boot
+os.environ["OMP_NUM_THREADS"] = "1"
 
 app = FastAPI(title="CutPaste Web API")
 
@@ -25,14 +19,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Lazy loading session to avoid Vercel deployment timeouts during build/cold-start
+# Lazy loading session to avoid deployment timeouts during build/cold-start
 sess = None
 
 def get_session():
     global sess
     if sess is None:
         try:
-            print("Loading u2net model...")
+            print("Importing rembg and loading model (this could take a minute)...")
+            from rembg import new_session
             sess = new_session("u2net")
         except Exception as e:
             print(f"Failed to load model: {e}")
@@ -44,7 +39,14 @@ async def remove_background(file: UploadFile = File(...)):
     if session is None:
         return Response(content="Model not loaded or rembg is not installed", status_code=500)
     
+    try:
+        from rembg import remove
+    except ImportError:
+        return Response(content="Model not loaded or rembg is not installed", status_code=500)
+    
     data = await file.read()
+    
+    from PIL import Image, ImageFilter
     orig = Image.open(io.BytesIO(data)).convert("RGBA")
     W, H = orig.size
 
@@ -89,4 +91,5 @@ if os.path.exists(static_dir):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
