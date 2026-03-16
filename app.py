@@ -36,7 +36,7 @@ def get_session():
     return sess
 
 @app.post("/api/remove-bg")
-async def remove_background(file: UploadFile = File(...)):
+def remove_background(file: UploadFile = File(...)):
     session = get_session()
     if session is None:
         return Response(content="Model not loaded or rembg is not installed", status_code=500)
@@ -46,17 +46,17 @@ async def remove_background(file: UploadFile = File(...)):
     except ImportError:
         return Response(content="Model not loaded or rembg is not installed", status_code=500)
     
-    data = await file.read()
+    data = file.file.read()
     
     from PIL import Image, ImageFilter
     orig = Image.open(io.BytesIO(data)).convert("RGBA")
     W, H = orig.size
 
-    # Remove background. Using u2netp and disabling alpha matting for faster processing on free cloud CPUs.
+    # Remove background. Using u2netp (fast model) and disabling heavy processing steps for free cloud CPUs.
     out_bytes = remove(
         data, session=session,
         alpha_matting=False,
-        post_process_mask=True,
+        post_process_mask=False,
     )
 
     res = Image.open(io.BytesIO(out_bytes)).convert("RGBA")
